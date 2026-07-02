@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stree"
+version = "0.1.0"
+description = "Smart tree: fast filename indexing and search across large disks"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+
+[project.scripts]
+mktree = "stree.cli:mktree_main"
+sfind = "stree.cli:sfind_main"
+dfind = "stree.cli:dfind_main"
+ptree = "stree.cli:ptree_main"
+streeconfig = "stree.cli:config_main"
+
+[tool.setuptools]
+packages = ["stree"]
