@@ -2,6 +2,7 @@ import gzip
 import json
 import os
 import re
+import shutil
 import sys
 import time
 from collections import defaultdict
@@ -48,7 +49,18 @@ def _make_file_node(dirpath, name, large_bytes):
     return node
 
 
-def _build_node(path, cfg, large_bytes):
+def _report(path, stats):
+    width = shutil.get_terminal_size((100, 20)).columns - 1
+    line = f"[{stats['dirs']} dirs, {stats['files']} files] {path}"
+    sys.stdout.write("\r" + line[:width].ljust(width))
+    sys.stdout.flush()
+
+
+def _build_node(path, cfg, large_bytes, verbose, stats):
+    if verbose:
+        stats["dirs"] += 1
+        _report(path, stats)
+
     try:
         entries = list(os.scandir(path))
     except (PermissionError, FileNotFoundError, NotADirectoryError, OSError):
@@ -66,6 +78,9 @@ def _build_node(path, cfg, large_bytes):
         except OSError:
             continue
 
+    if verbose:
+        stats["files"] += len(files)
+
     children = []
     kept_files, notes = _group_similar(
         files, cfg["similar_group_threshold"], cfg["similar_group_keep"]
@@ -79,7 +94,7 @@ def _build_node(path, cfg, large_bytes):
         dpath = os.path.join(path, d)
         if dpath in SKIP_DIRS:
             continue
-        child = _build_node(dpath, cfg, large_bytes)
+        child = _build_node(dpath, cfg, large_bytes, verbose, stats)
         child["name"] = d
         child["type"] = "d"
         children.append(child)
@@ -87,7 +102,7 @@ def _build_node(path, cfg, large_bytes):
     return {"children": children}
 
 
-def build_index(root="/", quiet=False):
+def build_index(root="/", quiet=False, verbose=False):
     cfg = load_config()
     large_bytes = cfg["large_file_mb"] * 1024 * 1024
     sys.setrecursionlimit(10000)
@@ -97,9 +112,13 @@ def build_index(root="/", quiet=False):
         print(f"Indexing {root} ...")
     t0 = time.time()
 
-    tree = _build_node(root, cfg, large_bytes)
+    stats = {"dirs": 0, "files": 0}
+    tree = _build_node(root, cfg, large_bytes, verbose, stats)
     tree["name"] = root
     tree["type"] = "d"
+
+    if verbose:
+        sys.stdout.write("\n")
 
     os.makedirs(STREE_DIR, exist_ok=True)
     with gzip.open(INDEX_PATH, "wt", encoding="utf-8") as f:

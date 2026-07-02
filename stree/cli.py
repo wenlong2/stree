@@ -13,8 +13,9 @@ def mktree_main():
     )
     ap.add_argument("root", nargs="?", default="/", help="root path to index (default: /)")
     ap.add_argument("-q", "--quiet", action="store_true")
+    ap.add_argument("-v", "--verbose", action="store_true", help="show current directory being scanned")
     args = ap.parse_args()
-    build_index(args.root, quiet=args.quiet)
+    build_index(args.root, quiet=args.quiet, verbose=args.verbose)
 
 
 def sfind_main():
