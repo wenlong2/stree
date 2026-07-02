@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from .config import load_config, save_config
+from .config import BOOL_KEYS, load_config, save_config
 from .indexer import build_index
 from .printer import print_tree
 from .search import find
@@ -61,6 +61,17 @@ def ptree_main():
         sys.exit(1)
 
 
+def _parse_value(key, value):
+    if key in BOOL_KEYS:
+        v = value.strip().lower()
+        if v in ("1", "true", "yes", "on"):
+            return True
+        if v in ("0", "false", "no", "off"):
+            return False
+        raise ValueError(f"{key} expects a boolean (true/false), got '{value}'")
+    return int(value)
+
+
 def config_main():
     ap = argparse.ArgumentParser(
         prog="streeconfig", description="View or edit stree configuration (~/.stree/config.json)"
@@ -71,7 +82,7 @@ def config_main():
         metavar=("KEY", "VALUE"),
         action="append",
         default=[],
-        help="set a config key, e.g. --set similar_group_threshold 100",
+        help="set a config key, e.g. --set similar_group_threshold 100 or --set ignore_dot_dirs false",
     )
     args = ap.parse_args()
     cfg = load_config()
@@ -80,7 +91,11 @@ def config_main():
         if k not in cfg:
             print(f"Unknown key: {k}. Valid keys: {list(cfg.keys())}", file=sys.stderr)
             sys.exit(1)
-        cfg[k] = int(v)
+        try:
+            cfg[k] = _parse_value(k, v)
+        except ValueError as e:
+            print(e, file=sys.stderr)
+            sys.exit(1)
     if args.set:
         save_config(cfg)
 

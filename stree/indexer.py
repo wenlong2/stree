@@ -66,14 +66,21 @@ def _build_node(path, cfg, large_bytes, verbose, stats):
     except (PermissionError, FileNotFoundError, NotADirectoryError, OSError):
         return {"children": []}
 
+    ignore_dot_dirs = cfg["ignore_dot_dirs"]
+    ignore_dot_files = cfg["ignore_dot_files"]
+
     dirs, files = [], []
     for e in entries:
         try:
             if e.is_symlink():
                 continue
             if e.is_dir(follow_symlinks=False):
+                if ignore_dot_dirs and e.name.startswith("."):
+                    continue
                 dirs.append(e.name)
             elif e.is_file(follow_symlinks=False):
+                if ignore_dot_files and e.name.startswith("."):
+                    continue
                 files.append(e.name)
         except OSError:
             continue

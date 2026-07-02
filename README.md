@@ -10,11 +10,21 @@ similarly-named files (e.g. `lc001.dat`, `lc002.dat`, ... `lc199.dat`)
 are collapsed: only a handful of representative files are kept, plus a
 note like `144+ more similar files like 'lc###.dat'`.
 
+By default, folders starting with `.` (e.g. `.git`, `.cache`) are not
+walked into at all, while individual dotfiles (e.g. `.gitignore`,
+`.env`) are still indexed normally. Both behaviors are configurable.
+
 ## Install
 
 ```bash
-pip install .
-# or, for development:
+pip install git+https://github.com/wenlong2/stree.git
+```
+
+Or clone and install locally:
+
+```bash
+git clone https://github.com/wenlong2/stree.git
+cd stree
 pip install -e .
 ```
 
@@ -23,8 +33,10 @@ pip install -e .
 ### `mktree` — build the index
 
 ```bash
-mktree            # index the whole disk (from /) into ~/.stree/stree
-mktree /home/me    # index only a subtree
+mktree             # index the whole disk (from /) into ~/.stree/stree
+mktree /home/me     # index only a subtree
+mktree -v           # show live progress (current dir, dirs/files scanned)
+mktree -q           # suppress the banner/summary lines
 ```
 
 ### `sfind` — find files by name
@@ -60,15 +72,21 @@ won't show files skipped during indexing.
 ```bash
 streeconfig
 streeconfig --set similar_group_threshold 100
+streeconfig --set ignore_dot_dirs false
+streeconfig --set ignore_dot_files true
 ```
 
 Config lives at `~/.stree/config.json`:
 
-| key                       | meaning                                                        | default |
-|---------------------------|------------------------------------------------------------------|---------|
-| `similar_group_threshold` | group size (N) above which similar filenames get collapsed       | 50      |
-| `similar_group_keep`      | how many files (N2) to keep per collapsed group                  | 5       |
-| `large_file_mb`           | file size in MB (N3) above which the size is recorded            | 5       |
+| key                       | meaning                                                           | default |
+|---------------------------|--------------------------------------------------------------------|---------|
+| `similar_group_threshold` | group size (N) above which similar filenames get collapsed         | 50      |
+| `similar_group_keep`      | how many files (N2) to keep per collapsed group                    | 5       |
+| `large_file_mb`           | file size in MB (N3) above which the size is recorded              | 5       |
+| `ignore_dot_dirs`         | skip recursing into folders whose name starts with `.`             | true    |
+| `ignore_dot_files`        | skip indexing files whose name starts with `.`                     | false   |
+
+Boolean keys accept `true`/`false` (also `1`/`0`, `yes`/`no`, `on`/`off`).
 
 ## Files
 

@@ -12,7 +12,12 @@ DEFAULT_CONFIG = {
     "similar_group_threshold": 50,  # N
     "similar_group_keep": 5,        # N2
     "large_file_mb": 5,             # N3
+    "ignore_dot_dirs": True,        # skip recursing into folders starting with "."
+    "ignore_dot_files": False,      # keep (do not skip) files starting with "."
 }
+
+# keys that hold booleans rather than ints, so the CLI knows how to parse --set
+BOOL_KEYS = {"ignore_dot_dirs", "ignore_dot_files"}
 
 
 def load_config():
