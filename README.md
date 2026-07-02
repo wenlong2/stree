@@ -1,18 +1,57 @@
-# stree (smart tree)
+# 🌲 stree — smart tree
 
-Fast filename indexing and search for large disks. `stree` walks the
-filesystem once, saves a compact index of *names only* (no file
-contents), then lets you search or browse that index instantly instead
-of re-walking the disk every time.
+**Index your entire disk in minutes, then search or browse it instantly — forever.**
 
-To keep the index small and fast, directories with a lot of
-similarly-named files (e.g. `lc001.dat`, `lc002.dat`, ... `lc199.dat`)
-are collapsed: only a handful of representative files are kept, plus a
-note like `144+ more similar files like 'lc###.dat'`.
+`stree` walks the filesystem once, records just the *names* (no file
+contents), and saves a compact index. From then on, finding a file or
+browsing a directory tree is instant — no more waiting on `find` or
+`du` to crawl millions of files every single time.
 
-By default, folders starting with `.` (e.g. `.git`, `.cache`) are not
-walked into at all, while individual dotfiles (e.g. `.gitignore`,
-`.env`) are still indexed normally. Both behaviors are configurable.
+```
+$ mktree -v
+[482,193 dirs, 3,910,204 files] /Users/me/Library/Caches/...
+Done in 94.3s. Index saved to ~/.stree/stree
+
+$ sfind '*invoice*2024*.pdf'
+/Users/me/Documents/Finance/invoice_march_2024.pdf
+/Users/me/Downloads/invoice-2024-11.pdf
+
+$ ptree ~/projects/stree
+/Users/me/projects/stree
+├── stree
+│   ├── __init__.py
+│   ├── cli.py
+│   ├── config.py
+│   ├── indexer.py
+│   ├── printer.py
+│   └── search.py
+├── LICENSE
+├── README.md
+└── pyproject.toml
+
+3 directories, 8 files
+```
+
+## Why
+
+Running `find / -name "*.dat"` on a disk with millions of files takes
+forever, every time. `stree` pays that cost once, then every search
+after that is just a lookup against a small local index.
+
+## Features
+
+- ⚡ **Fast repeat searches** — index once, search instantly afterward
+- 🗂️ **Smart deduplication** — directories with hundreds of similarly
+  named files (`lc001.dat` ... `lc199.dat`) get collapsed to a handful
+  of samples plus a note, so the index stays small
+- 📦 **Size-aware** — large files are flagged with their size right in
+  the index
+- 🙈 **Dotfile-aware** — ignores noisy folders like `.git`/`.cache` by
+  default, but still tracks dotfiles like `.gitignore`
+- 🔎 **Glob search** for files (`sfind`) and directories (`dfind`),
+  with optional case-insensitive matching
+- 🌳 **`tree`-style browsing** of the saved index via `ptree`
+- ⚙️ **Fully configurable** thresholds, all stored in one JSON file
 
 ## Install
 
@@ -43,11 +82,14 @@ mktree -q           # suppress the banner/summary lines
 
 ```bash
 sfind '*abc?[1-3].dat'
+sfind -i '*ABC?[1-3].DAT'   # case-insensitive
 ```
 
 Prints the full path of every matching file. Patterns are shell-glob
 style (`*`, `?`, `[...]`); a leading `^` or trailing `$` is tolerated
 and ignored, since matching is already against the whole filename.
+Matching is case-sensitive by default; pass `-i`/`--ignore-case` for
+case-insensitive matching.
 
 ### `dfind` — find directories by name
 
@@ -55,6 +97,7 @@ Same as `sfind`, but matches directory names instead of file names.
 
 ```bash
 dfind 'build*'
+dfind -i 'BUILD*'   # case-insensitive
 ```
 
 ### `ptree` — browse the index like `tree`

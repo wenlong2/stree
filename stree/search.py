@@ -34,16 +34,23 @@ def _walk(node, path):
         yield from _walk(child, os.path.join(path, child["name"]))
 
 
-def find(pattern, kind, tree=None):
+def find(pattern, kind, tree=None, ignore_case=False):
     """kind is 'f' for files or 'd' for directories."""
     tree = tree if tree is not None else load_index()
     pat = _normalize_pattern(pattern)
+    if ignore_case:
+        pat = pat.lower()
+
     results = []
     for path, node in _walk(tree, tree["name"]):
         if path == tree["name"]:
             continue
         if node.get("type") != kind:
             continue
-        if fnmatch.fnmatchcase(os.path.basename(path), pat):
+        name = os.path.basename(path)
+        if ignore_case:
+            if fnmatch.fnmatchcase(name.lower(), pat):
+                results.append(path)
+        elif fnmatch.fnmatchcase(name, pat):
             results.append(path)
     return results

@@ -23,9 +23,10 @@ def sfind_main():
         prog="sfind", description="Find files by name pattern in the stree index"
     )
     ap.add_argument("pattern", help="glob-like pattern, e.g. '*abc?[1-3].dat'")
+    ap.add_argument("-i", "--ignore-case", action="store_true", help="case-insensitive match")
     args = ap.parse_args()
     try:
-        for p in find(args.pattern, "f"):
+        for p in find(args.pattern, "f", ignore_case=args.ignore_case):
             print(p)
     except FileNotFoundError as e:
         print(e, file=sys.stderr)
@@ -37,9 +38,10 @@ def dfind_main():
         prog="dfind", description="Find directories by name pattern in the stree index"
     )
     ap.add_argument("pattern", help="glob-like pattern, e.g. 'build*'")
+    ap.add_argument("-i", "--ignore-case", action="store_true", help="case-insensitive match")
     args = ap.parse_args()
     try:
-        for p in find(args.pattern, "d"):
+        for p in find(args.pattern, "d", ignore_case=args.ignore_case):
             print(p)
     except FileNotFoundError as e:
         print(e, file=sys.stderr)
